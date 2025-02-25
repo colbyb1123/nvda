@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/NVDAMagnification" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/include/detours" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/include/espeak" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/include/ia2" vcs="Git" />

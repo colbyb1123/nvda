@@ -27,7 +27,7 @@ def run_mag():
 
 
 def exit_mag():
-	old_mag.MagSetFullscreenColorEffect(mag.const.COLOR_INVERSION_EFFECT)
+	#old_mag.MagSetFullscreenColorEffect(mag.const.COLOR_INVERSION_EFFECT)
 	input("Press Enter to continue...")
 
 
