@@ -51,3 +51,13 @@ licensecheck==2024.3
 robotframework==7.1.1
 robotremoteserver==1.1.1
 robotframework-screencaplibrary==1.6.0
+
+# Magnification Libs
+WinMagnification==0.1.0
+pywin32== 308
+
+GlobalVars~=0.0.5
+configobj~=5.1.0.dev0
+six~=1.16.0
+packaging~=24.2
+lxml~=5.3.0

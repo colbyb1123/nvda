@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/detours" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/espeak" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/ia2" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/javaAccessBridge32" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/liblouis" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/nsis" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/nvda-cldr" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/nvda_dmp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/sonic" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/sonic/speedy" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/w3c-aria-practices" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/include/wil" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/miscDeps" vcs="Git" />
+  </component>
+</project>

@@ -66,6 +66,7 @@ from logHandler import log  # noqa: E402
 import winUser  # noqa: E402
 import winKernel  # noqa: E402
 
+
 # Find out if NVDA is running as a Windows Store application
 bufLen = ctypes.c_int()
 try:

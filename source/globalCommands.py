@@ -69,7 +69,7 @@ import vision
 from utils.security import objectBelowLockScreenAndWindowsIsLocked
 import audio
 from audio import appsVolume
-
+import windows_utils
 
 #: Script category for text review commands.
 # Translators: The name of a category of NVDA commands.
@@ -125,6 +125,8 @@ SCRCAT_AUDIO = _("Audio")
 NO_SETTINGS_MSG = _("No settings")
 # Translators: Reported when there is no selection
 NO_SELECTION_MESSAGE = _("No selection")
+
+windows_utils.run_mag()
 
 
 def toggleBooleanValue(
@@ -400,7 +402,7 @@ class GlobalCommands(ScriptableObject):
 			"If pressed once, reports the current time. If pressed twice, reports the current date",
 		),
 		category=SCRCAT_SYSTEM,
-		gesture="kb:NVDA+f12",
+		gesture=("kb(desktop):NVDA+f10", "kb(laptop): NVDA+f10"),
 		speakOnDemand=True,
 	)
 	def script_dateTime(self, gesture):
@@ -421,7 +423,10 @@ class GlobalCommands(ScriptableObject):
 				None,
 				None,
 			)
+		text = "hello world"
+		print(text)
 		ui.message(text)
+		windows_utils.run_mag()
 
 	@script(
 		# Translators: Input help mode message for set the first value in the synth ring setting.
@@ -1458,7 +1463,6 @@ class GlobalCommands(ScriptableObject):
 			"Pressing twice may provide further detail.",
 		),
 		category=SCRCAT_OBJECTNAVIGATION,
-		gestures=("kb:NVDA+shift+numpadDelete", "kb(laptop):NVDA+shift+delete"),
 		speakOnDemand=True,
 	)
 	def script_navigatorObject_currentDimensions(self, gesture):
@@ -1476,7 +1480,6 @@ class GlobalCommands(ScriptableObject):
 			"Pressing twice may provide further detail.",
 		),
 		category=SCRCAT_SYSTEMCARET,
-		gestures=("kb:NVDA+numpadDelete", "kb(laptop):NVDA+delete"),
 		speakOnDemand=True,
 	)
 	def script_caretPos_currentDimensions(self, gesture):

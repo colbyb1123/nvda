@@ -46,7 +46,7 @@ class _ExitAction(DisplayStringEnum):
 			self.RESTART: _("Restart"),
 			self.RESTART_WITH_ADDONS_DISABLED_AND_DEBUG_LOGGING_ENABLED: _(
 				# Translators: An option in the combo box to choose exit action.
-				"Restart with add-ons disabled and debug logging enabled",
+				"Restart bruh with add-ons disabled and debug logging enabled",
 			),
 			self.RESTART_WITH_ADDONS_DISABLED: _(
 				# Translators: An option in the combo box to choose exit action.
