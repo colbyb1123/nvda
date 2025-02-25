@@ -126,7 +126,7 @@ NO_SETTINGS_MSG = _("No settings")
 # Translators: Reported when there is no selection
 NO_SELECTION_MESSAGE = _("No selection")
 
-windows_utils.run_mag()
+
 
 
 def toggleBooleanValue(
@@ -176,6 +176,25 @@ class GlobalCommands(ScriptableObject):
 		nextLabel = audioDucking.AudioDuckingMode(nextMode).displayString
 		ui.message(nextLabel)
 
+	@script(
+		# Translators: Input help mode message for activate python console command.
+		description=_("Activates Magnifier"),
+		category=SCRCAT_TOOLS,
+		gesture="kb:NVDA+control+x",
+	)
+	def script_activateMagnification(self, gesture):
+		windows_utils.run_mag()
+		ui.message("running magnification")
+
+	@script(
+		# Translators: Input help mode message for activate python console command.
+		description=_("Deactivates Magnifier"),
+		category=SCRCAT_TOOLS,
+		gesture="kb:NVDA+control+q",
+	)
+	def script_deactivateMagnification(self, gesture):
+		windows_utils.run_mag()
+		ui.message("exiting magnification")
 	@script(
 		description=_(
 			# Translators: Input help mode message for toggle input help command.
@@ -402,7 +421,7 @@ class GlobalCommands(ScriptableObject):
 			"If pressed once, reports the current time. If pressed twice, reports the current date",
 		),
 		category=SCRCAT_SYSTEM,
-		gesture=("kb(desktop):NVDA+f10", "kb(laptop): NVDA+f10"),
+		gesture=("kb:NVDA+f12"),
 		speakOnDemand=True,
 	)
 	def script_dateTime(self, gesture):
@@ -423,11 +442,9 @@ class GlobalCommands(ScriptableObject):
 				None,
 				None,
 			)
-		text = "hello world"
-		print(text)
-		ui.message(text)
-		windows_utils.run_mag()
 
+		ui.message(text)
+		#windows_utils.run_mag()
 	@script(
 		# Translators: Input help mode message for set the first value in the synth ring setting.
 		description=_("Set the first value of the current setting in the synth settings ring"),
@@ -3509,6 +3526,8 @@ class GlobalCommands(ScriptableObject):
 			gui.mainFrame.onRevertToSavedConfigurationCommand(None)
 		elif scriptCount == 2:
 			gui.mainFrame.onRevertToDefaultConfigurationCommand(None)
+
+
 
 	@script(
 		# Translators: Input help mode message for activate python console command.

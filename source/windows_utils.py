@@ -13,7 +13,7 @@ import win32con  # type: ignore
 import win32gui  # type: ignore
 
 import win_magnification as mag
-
+import win_magnification.old as old_mag
 
 # make_partial_screen & make_fullscreen
 # Inspired by:
@@ -21,15 +21,19 @@ import win_magnification as mag
 
 
 def run_mag():
-	mag.initialize()
+	old_mag.MagInitialize()
+	old_mag.MagSetFullscreenTransform(2, (2, 2))
+	old_mag.MagSetFullscreenColorEffect(mag.const.COLOR_INVERSION_EFFECT)
 
-	mag.set_fullscreen_transform(2, [2, 2])
-	mag.set_fullscreen_color_effect(mag.const.COLOR_INVERSION_EFFECT)
-	print(platform.python_version())
+
+def exit_mag():
+	old_mag.MagSetFullscreenColorEffect(mag.const.COLOR_INVERSION_EFFECT)
 	input("Press Enter to continue...")
 
 
-run_mag()
+
+#old_mag.MagUninitialize()
+
 
 
 def make_partial_screen(hwnd, rectangle: mag.types.Rectangle):

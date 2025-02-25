@@ -646,6 +646,7 @@ def nvdaControllerInternal_typedCharacterNotify(ch):
 	return 0
 
 
+
 @WINFUNCTYPE(c_long, c_int, c_int)
 def nvdaControllerInternal_vbufChangeNotify(rootDocHandle, rootID):
 	import virtualBuffers
