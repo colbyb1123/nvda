@@ -127,8 +127,6 @@ NO_SETTINGS_MSG = _("No settings")
 NO_SELECTION_MESSAGE = _("No selection")
 
 
-
-
 def toggleBooleanValue(
 	configSection: str,
 	configKey: str,
@@ -182,19 +180,44 @@ class GlobalCommands(ScriptableObject):
 		category=SCRCAT_TOOLS,
 		gesture="kb:NVDA+control+x",
 	)
-	def script_activateMagnification(self, gesture):
-		windows_utils.run_mag()
-		ui.message("running magnification")
+	def script_magOnOff(self, gesture):
+		if not windows_utils.mag_on:
+			windows_utils.run_mag()
+			ui.message("Starting Magnification")
+		else:
+			windows_utils.exit_mag()
+			ui.message("Exiting Magnification")
 
 	@script(
 		# Translators: Input help mode message for activate python console command.
-		description=_("Deactivates Magnifier"),
+		description=_("Increases Magnification Level"),
+		category=SCRCAT_TOOLS,
+		gesture="kb:NVDA+control+9",
+	)
+	def script_magIncrease(self, gesture):
+		windows_utils.mag_increase()
+		ui.message(windows_utils.mag_getLevel())
+
+	@script(
+		# Translators: Input help mode message for activate python console command.
+		description=_("Decreases Magnification Level"),
+		category=SCRCAT_TOOLS,
+		gesture="kb:NVDA+control+8",
+	)
+	def script_magDecrease(self, gesture):
+		windows_utils.mag_decrease()
+		ui.message(windows_utils.mag_getLevel())
+
+	@script(
+		# Translators: Input help mode message for activate python console command.
+		description=_("Cycles Color Effects"),
 		category=SCRCAT_TOOLS,
 		gesture="kb:NVDA+control+q",
 	)
-	def script_deactivateMagnification(self, gesture):
-		windows_utils.run_mag()
-		ui.message("exiting magnification")
+	def script_magSetColor(self, gesture):
+		windows_utils.mag_setColor()
+		ui.message(windows_utils.mag_getColor())
+
 	@script(
 		description=_(
 			# Translators: Input help mode message for toggle input help command.
@@ -444,7 +467,7 @@ class GlobalCommands(ScriptableObject):
 			)
 
 		ui.message(text)
-		#windows_utils.run_mag()
+
 	@script(
 		# Translators: Input help mode message for set the first value in the synth ring setting.
 		description=_("Set the first value of the current setting in the synth settings ring"),
@@ -3526,8 +3549,6 @@ class GlobalCommands(ScriptableObject):
 			gui.mainFrame.onRevertToSavedConfigurationCommand(None)
 		elif scriptCount == 2:
 			gui.mainFrame.onRevertToDefaultConfigurationCommand(None)
-
-
 
 	@script(
 		# Translators: Input help mode message for activate python console command.

@@ -1,12 +1,10 @@
 import abc
 import ctypes
 import functools
-import platform
 import queue
 import typing
 import weakref
 import threading
-
 
 import win32api  # type: ignore
 import win32con  # type: ignore
@@ -19,21 +17,70 @@ import win_magnification.old as old_mag
 # Inspired by:
 # https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/Magnification/cpp/Windowed/MagnifierSample.cpp
 
+#Identifier for Magnification ON/Off
+mag_on = False
 
+#Array of available Color Filters
+colors = [
+	mag.const.COLOR_NO_EFFECT,
+	mag.const.COLOR_INVERSION_EFFECT,
+	mag.const.COLOR_GRAYSCALE_EFFECT,
+	mag.const.COLOR_INVERTED_GRAYSCALE_EFFECT,
+	mag.const.COLOR_SEPIA_EFFECT,
+]
+
+#Current Color Filter Tracker
+curr_color = 0
+
+#Current Magnification Level Tracker
+mag_level = 1
+
+#Activates Magnification
 def run_mag():
+	global mag_on
 	old_mag.MagInitialize()
-	old_mag.MagSetFullscreenTransform(2, (2, 2))
-	old_mag.MagSetFullscreenColorEffect(mag.const.COLOR_INVERSION_EFFECT)
+	mag_on = True
 
 
+#Deactivates Magnification
 def exit_mag():
-	#old_mag.MagSetFullscreenColorEffect(mag.const.COLOR_INVERSION_EFFECT)
-	input("Press Enter to continue...")
+	global mag_on
+	old_mag.MagUninitialize()
+	mag_on = False
 
+#Increases Magnification Level
+def mag_increase():
+	global mag_level
+	mag_level += 1
+	old_mag.MagSetFullscreenTransform(mag_level, [2, 2])
 
+#Decreases Magnification Level
+def mag_decrease():
+	global mag_level
+	if mag_level <= 1:
+		old_mag.MagSetFullscreenTransform(1, [2, 2])
+	else:
+		mag_level -= 1
+		old_mag.MagSetFullscreenTransform(mag_level, [2, 2])
 
-#old_mag.MagUninitialize()
+#Returns Magnification Level as String for UI Message
+def mag_getLevel():
+	level_name = mag_level - 1
+	level_name = str(level_name)
+	return "Magnification Level " + level_name
 
+#Cycles Color Filter
+def mag_setColor():
+	global curr_color
+	curr_color += 1
+	curr_color %= 5
+	old_mag.MagSetFullscreenColorEffect(colors[curr_color])
+
+#Returns String of Current Color Filter for UI Message
+def mag_getColor():
+	color_names = ["Default", "Inverted", "Grayscale", "Inverted Grayscale", "Sepia"]
+	curr_name = color_names[curr_color]
+	return curr_name
 
 
 def make_partial_screen(hwnd, rectangle: mag.types.Rectangle):
