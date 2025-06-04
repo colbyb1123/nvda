@@ -49,7 +49,6 @@ from config.featureFlag import FeatureFlag
 from config.featureFlagEnums import BoolFlag
 import winUser
 import appModuleHandler
-import winKernel
 import treeInterceptorHandler
 import browseMode
 import languageHandler
@@ -66,10 +65,13 @@ from winAPI._powerTracking import reportCurrentBatteryStatus
 import winVersion
 from base64 import b16encode
 import vision
+import vision.visionHandler
+
 from utils.security import objectBelowLockScreenAndWindowsIsLocked
 import audio
 from audio import appsVolume
 import windows_utils
+import winKernel
 
 #: Script category for text review commands.
 # Translators: The name of a category of NVDA commands.
@@ -176,9 +178,23 @@ class GlobalCommands(ScriptableObject):
 
 	@script(
 		# Translators: Input help mode message for activate python console command.
-		description=_("Activates Magnifier"),
+		description=_("Activates highlighter"),
 		category=SCRCAT_TOOLS,
 		gesture="kb:NVDA+control+x",
+	)
+	def script_highlighter(self, gesture):
+		handler = vision.visionHandler.VisionHandler()
+		providerInfo = handler.getProviderInfo("NVDAHighlighter")
+		if handler.getProviderInstance(providerInfo):
+			handler.terminateProvider(providerInfo)
+		else:
+			handler.initializeProvider(providerInfo)
+
+	@script(
+		# Translators: Input help mode message for activate python console command.
+		description=_("Activates Magnifier"),
+		category=SCRCAT_TOOLS,
+		# gesture="kb:NVDA+control+x",
 	)
 	def script_magOnOff(self, gesture):
 		if not windows_utils.mag_on:
@@ -217,6 +233,16 @@ class GlobalCommands(ScriptableObject):
 	def script_magSetColor(self, gesture):
 		windows_utils.mag_setColor()
 		ui.message(windows_utils.mag_getColor())
+
+	# test
+	@script(
+		# Translators: Input help mode message for activate python console command.
+		description=_("Enables Mouse Tracking"),
+		category=SCRCAT_TOOLS,
+		gesture="kb:control+z",
+	)
+	def script_magMouseTrack(self, gesture):
+		windows_utils.track()
 
 	@script(
 		description=_(

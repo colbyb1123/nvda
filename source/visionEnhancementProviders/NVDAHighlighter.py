@@ -35,6 +35,7 @@ import winGDI
 import weakref
 from colors import RGB
 import core
+import windows_utils
 
 
 class HighlightStyle(
@@ -355,13 +356,11 @@ class NVDAHighlighterGuiPanel(
 		self._updateEnabledState()
 
 	def _ensureEnableState(self, shouldBeEnabled: bool) -> bool:
-		currentlyEnabled = bool(self._providerControl.getProviderInstance())
-		if shouldBeEnabled and not currentlyEnabled:
-			return self._providerControl.startProvider()
-		elif not shouldBeEnabled and currentlyEnabled:
-			return self._providerControl.terminateProvider()
-		return True
-
+		if shouldBeEnabled:
+			windows_utils.run_mag()
+			windows_utils.set_level()# Call your custom function here
+		return True  # Always pretend success
+ 
 	def _onCheckEvent(self, evt: wx.CommandEvent):
 		settingsStorage = self._getSettingsStorage()
 		if evt.GetEventObject() is self._enabledCheckbox:

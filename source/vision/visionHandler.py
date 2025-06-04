@@ -95,6 +95,12 @@ class VisionHandler(AutoPropertyObject):
 		This ensures that the gui is fully initialized before providers are initialized that might rely on it.
 		"""
 		self._updateAllProvidersList()
+
+		from logHandler import log
+
+		log.debug(">>> All loaded providers:")
+		for p in self._allProviders:
+			log.debug(f"  - {p.providerId} from {p.moduleName}")
 		self.handleConfigProfileSwitch()
 		config.post_configProfileSwitch.register(self.handleConfigProfileSwitch)
 
