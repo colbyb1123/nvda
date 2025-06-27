@@ -8,7 +8,6 @@ import threading
 import win32api  # type: ignore
 import win32con  # type: ignore
 import win32gui  # type: ignore
-import time
 import win_magnification as mag
 
 # make_partial_screen & make_fullscreen
@@ -47,8 +46,15 @@ def exit_mag():
 	mag.finalize()
 	mag_on = False
 
+
 def set_level():
 	mag.set_fullscreen_transform(2, [2, 2])
+
+
+def set_pos(x, y):
+	mag.set_fullscreen_transform(2, [x, y])
+
+
 # Increases Magnification Level
 def mag_increase():
 	global mag_level
@@ -91,9 +97,6 @@ def mag_getColor():
 def track():
 	x, y = win32api.GetCursorPos()
 	mag.set_fullscreen_transform(1, [x, y])
-
-
-
 
 
 def make_partial_screen(hwnd, rectangle: mag.types.Rectangle):

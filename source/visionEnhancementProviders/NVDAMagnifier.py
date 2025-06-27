@@ -35,6 +35,7 @@ import winGDI
 import weakref
 from colors import RGB
 import core
+import windows_utils
 
 
 class HighlightStyle(
@@ -68,10 +69,10 @@ SOLID_BLUE = HighlightStyle(BLUE, 5, winGDI.DashStyleSolid, 5)
 SOLID_YELLOW = HighlightStyle(YELLOW, 2, winGDI.DashStyleSolid, 2)
 
 
-class HighlightWindow(CustomWindow):
+class MagnifyWindow(CustomWindow):
 	transparency = 0xFF
-	className = "NVDAHighlighter"
-	windowName = "NVDA Highlighter Window"
+	className = "NVDAMagnifier"
+	windowName = "NVDA Magnifier Window"
 	windowStyle = winUser.WS_POPUP | winUser.WS_DISABLED
 	extendedWindowStyle = (
 		# Ensure that the window is on top of all other windows
@@ -95,7 +96,7 @@ class HighlightWindow(CustomWindow):
 
 	def updateLocationForDisplays(self):
 		if vision._isDebug():
-			log.debug("Updating NVDAHighlighter window location for displays")
+			log.debug("Updating NVDAMagnifier window location for displays")
 		displays = [wx.Display(i).GetGeometry() for i in range(wx.Display.GetCount())]
 		screenWidth, screenHeight, minPos = getTotalWidthAndHeightAndMinimumPosition(displays)
 		# Hack: Windows has a "feature" that will stop desktop shortcut hotkeys from working
@@ -119,16 +120,16 @@ class HighlightWindow(CustomWindow):
 			raise WinError()
 		winUser.user32.ShowWindow(self.handle, winUser.SW_SHOWNA)
 
-	def __init__(self, highlighter):
+	def __init__(self, magnifier):
 		if vision._isDebug():
-			log.debug("initializing NVDAHighlighter window")
+			log.debug("initializing NVDAMagnifier window")
 		super().__init__(
 			windowName=self.windowName,
 			windowStyle=self.windowStyle,
 			extendedWindowStyle=self.extendedWindowStyle,
 		)
 		self.location = None
-		self.highlighterRef = weakref.ref(highlighter)
+		self.magnifierRef = weakref.ref(magnifier)
 		winUser.SetLayeredWindowAttributes(
 			self.handle,
 			self.transparentColor,
@@ -161,14 +162,14 @@ class HighlightWindow(CustomWindow):
 			core.callLater(100, self.updateLocationForDisplays)
 
 	def _paint(self):
-		highlighter = self.highlighterRef()
-		if not highlighter:
-			# The highlighter instance died unexpectedly, kill the window as well
+		magnifier = self.magnifierRef()
+		if not magnifier:
+			# The magnifier instance died unexpectedly, kill the window as well
 			winUser.user32.PostQuitMessage(0)
 			return
 		contextRects = {}
-		for context in highlighter.enabledContexts:
-			rect = highlighter.contextToRectMap.get(context)
+		for context in magnifier.enabledContexts:
+			rect = magnifier.contextToRectMap.get(context)
 			if not rect:
 				continue
 			elif context == Context.NAVIGATOR and contextRects.get(Context.FOCUS) == rect:
@@ -185,9 +186,9 @@ class HighlightWindow(CustomWindow):
 		with winUser.paint(self.handle) as hdc:
 			with winGDI.GDIPlusGraphicsContext(hdc) as graphicsContext:
 				for context, rect in contextRects.items():
-					HighlightStyle = highlighter._ContextStyles[context]
+					HighlightStyle = magnifier._ContextStyles[context]
 					# Before calculating logical coordinates,
-					# make sure the rectangle falls within the highlighter window
+					# make sure the rectangle falls within the magnifier window
 					rect = rect.intersection(self.location)
 					try:
 						rect = rect.toLogical(self.handle)
@@ -210,13 +211,13 @@ class HighlightWindow(CustomWindow):
 
 
 _contextOptionLabelsWithAccelerators = {
-	# Translators: shown for a highlighter setting that toggles
+	# Translators: shown for a magnifier setting that toggles
 	# highlighting the system focus.
 	Context.FOCUS: _("Highlight system fo&cus"),
-	# Translators: shown for a highlighter setting that toggles
+	# Translators: shown for a magnifier setting that toggles
 	# highlighting the browse mode cursor.
 	Context.BROWSEMODE: _("Highlight browse &mode cursor"),
-	# Translators: shown for a highlighter setting that toggles
+	# Translators: shown for a magnifier setting that toggles
 	# highlighting the navigator object.
 	Context.NAVIGATOR: _("Highlight navigator &object"),
 }
@@ -224,25 +225,25 @@ _contextOptionLabelsWithAccelerators = {
 _supportedContexts = (Context.FOCUS, Context.NAVIGATOR, Context.BROWSEMODE)
 
 
-class NVDAHighlighterSettings(providerBase.VisionEnhancementProviderSettings):
+class NVDAMagnifierSettings(providerBase.VisionEnhancementProviderSettings):
 	# Default settings for parameters
-	highlightFocus = False
-	highlightNavigator = False
-	highlightBrowseMode = False
+	magnifyFocus = False
+	magnifyNavigator = False
+	magnifyBrowseMode = False
 
 	@classmethod
 	def getId(cls) -> str:
-		return "NVDAHighlighter"
+		return "NVDAMagnifier"
 
 	@classmethod
 	def getDisplayName(cls) -> str:
-		# Translators: Description for NVDA's built-in screen highlighter.
-		return _("Visual Highlight")
+		# Translators: Description for NVDA's built-in screen magnifier.
+		return _("Visual Magnifier")
 
 	def _get_supportedSettings(self) -> SupportedSettingType:
 		return [
 			BooleanDriverSetting(
-				"highlight%s" % (context[0].upper() + context[1:]),
+				"magnify%s" % (context[0].upper() + context[1:]),
 				_contextOptionLabelsWithAccelerators[context],
 				defaultVal=True,
 			)
@@ -250,14 +251,14 @@ class NVDAHighlighterSettings(providerBase.VisionEnhancementProviderSettings):
 		]
 
 
-class NVDAHighlighterGuiPanel(
+class NVDAMagnifierGuiPanel(
 	AutoSettingsMixin,
 	SettingsPanel,
 ):
 	_enableCheckSizer: wx.BoxSizer
 	_enabledCheckbox: wx.CheckBox
 
-	helpId = "VisionSettingsFocusHighlight"
+	helpId = "VisionSettingsFocusMagnify"
 
 	def __init__(
 		self,
@@ -265,22 +266,22 @@ class NVDAHighlighterGuiPanel(
 		providerControl: VisionProviderStateControl,
 	):
 		self._providerControl = providerControl
-		initiallyEnabledInConfig = NVDAHighlighter.isEnabledInConfig()
+		initiallyEnabledInConfig = NVDAMagnifier.isEnabledInConfig()
 		if not initiallyEnabledInConfig:
 			settingsStorage = self._getSettingsStorage()
 			settingsToCheck = [
-				settingsStorage.highlightBrowseMode,
-				settingsStorage.highlightFocus,
-				settingsStorage.highlightNavigator,
+				settingsStorage.magnifyBrowseMode,
+				settingsStorage.magnifyFocus,
+				settingsStorage.magnifyNavigator,
 			]
 			if any(settingsToCheck):
 				log.debugWarning(
-					"Highlighter disabled in config while some of its settings are enabled. "
+					"Magnifier disabled in config while some of its settings are enabled. "
 					"This will be corrected",
 				)
-				settingsStorage.highlightBrowseMode = False
-				settingsStorage.highlightFocus = False
-				settingsStorage.highlightNavigator = False
+				settingsStorage.magnifyBrowseMode = False
+				settingsStorage.magnifyFocus = False
+				settingsStorage.magnifyNavigator = False
 		super().__init__(parent)
 
 	def _buildGui(self):
@@ -288,9 +289,9 @@ class NVDAHighlighterGuiPanel(
 
 		self._enabledCheckbox = wx.CheckBox(
 			self,
-			#  Translators: The label for a checkbox that enables / disables focus highlighting
-			#  in the NVDA Highlighter vision settings panel.
-			label=_("&Enable Highlighting"),
+			#  Translators: The label for a checkbox that enables / disables focus magnification
+			#  in the NVDA magnifier vision settings panel.
+			label=_("&Enable Magnification"),
 			style=wx.CHK_3STATE,
 		)
 
@@ -300,7 +301,7 @@ class NVDAHighlighterGuiPanel(
 		# but visually some separation is helpful, since the rest of the options are really sub-settings.
 		self.optionsText = wx.StaticText(
 			self,
-			# Translators: The label for a group box containing the NVDA highlighter options.
+			# Translators: The label for a group box containing the NVDA magnifier options.
 			label=_("Options:"),
 		)
 		self.mainSizer.Add(self.optionsText)
@@ -312,7 +313,7 @@ class NVDAHighlighterGuiPanel(
 		self.mainSizer.Fit(self)
 		self.SetSizer(self.mainSizer)
 
-	def getSettings(self) -> NVDAHighlighterSettings:
+	def getSettings(self) -> NVDAMagnifierSettings:
 		# AutoSettingsMixin uses the getSettings method (via getSettingsStorage) to get the instance which is
 		# used to get / set attributes. The attributes must match the id's of the settings.
 		# We want them set on our settings instance.
@@ -330,9 +331,9 @@ class NVDAHighlighterGuiPanel(
 	def _updateEnabledState(self):
 		settingsStorage = self._getSettingsStorage()
 		settingsToTriggerActivation = [
-			settingsStorage.highlightBrowseMode,
-			settingsStorage.highlightFocus,
-			settingsStorage.highlightNavigator,
+			settingsStorage.magnifyBrowseMode,
+			settingsStorage.magnifyFocus,
+			settingsStorage.magnifyNavigator,
 		]
 		isAnyEnabled = any(settingsToTriggerActivation)
 		if all(settingsToTriggerActivation):
@@ -346,17 +347,20 @@ class NVDAHighlighterGuiPanel(
 			self._onEnableFailure()
 
 	def _onEnableFailure(self):
-		"""Initialization of Highlighter failed. Reset settings / GUI"""
+		"""Initialization of magnifier failed. Reset settings / GUI"""
 		settingsStorage = self._getSettingsStorage()
-		settingsStorage.highlightBrowseMode = False
-		settingsStorage.highlightFocus = False
-		settingsStorage.highlightNavigator = False
+		settingsStorage.magnifyBrowseMode = False
+		settingsStorage.magnifyFocus = False
+		settingsStorage.magnifyNavigator = False
 		self.updateDriverSettings()
 		self._updateEnabledState()
 
 	def _ensureEnableState(self, shouldBeEnabled: bool) -> bool:
 		currentlyEnabled = bool(self._providerControl.getProviderInstance())
 		if shouldBeEnabled and not currentlyEnabled:
+			windows_utils.run_mag()
+			windows_utils.set_level()
+			log.debug("Running Mag")
 			return self._providerControl.startProvider()
 		elif not shouldBeEnabled and currentlyEnabled:
 			return self._providerControl.terminateProvider()
@@ -366,21 +370,21 @@ class NVDAHighlighterGuiPanel(
 		settingsStorage = self._getSettingsStorage()
 		if evt.GetEventObject() is self._enabledCheckbox:
 			isEnableAllChecked = evt.IsChecked()
-			settingsStorage.highlightBrowseMode = isEnableAllChecked
-			settingsStorage.highlightFocus = isEnableAllChecked
-			settingsStorage.highlightNavigator = isEnableAllChecked
+			settingsStorage.magnifyBrowseMode = isEnableAllChecked
+			settingsStorage.magnifyFocus = isEnableAllChecked
+			settingsStorage.magnifyNavigator = isEnableAllChecked
 			if not self._ensureEnableState(isEnableAllChecked) and isEnableAllChecked:
 				self._onEnableFailure()
 			self.updateDriverSettings()
 		else:
 			self._updateEnabledState()
 
-		providerInst: Optional[NVDAHighlighter] = self._providerControl.getProviderInstance()
+		providerInst: Optional[NVDAMagnifier] = self._providerControl.getProviderInstance()
 		if providerInst:
 			providerInst.refresh()
 
 
-class NVDAHighlighter(providerBase.VisionEnhancementProvider):
+class NVDAMagnifier(providerBase.VisionEnhancementProvider):
 	_ContextStyles = {
 		Context.FOCUS: DASH_BLUE,
 		Context.NAVIGATOR: SOLID_PINK,
@@ -388,13 +392,13 @@ class NVDAHighlighter(providerBase.VisionEnhancementProvider):
 		Context.BROWSEMODE: SOLID_YELLOW,
 	}
 	_refreshInterval = 100
-	customWindowClass = HighlightWindow
-	_settings = NVDAHighlighterSettings()
+	customWindowClass = MagnifyWindow
+	_settings = NVDAMagnifierSettings()
 	_window: Optional[customWindowClass] = None
 	enabledContexts: Tuple[Context]  # type info for autoprop: L{_get_enableContexts}
 
 	@classmethod  # override
-	def getSettings(cls) -> NVDAHighlighterSettings:
+	def getSettings(cls) -> NVDAMagnifierSettings:
 		return cls._settings
 
 	@classmethod  # override
@@ -403,7 +407,7 @@ class NVDAHighlighter(providerBase.VisionEnhancementProvider):
 		@return: Optional[SettingsPanel]
 		@remarks: When None is returned, L{gui.settingsDialogs.VisionProviderSubPanel_Wrapper} is used.
 		"""
-		return NVDAHighlighterGuiPanel
+		return NVDAMagnifierGuiPanel
 
 	@classmethod  # override
 	def canStart(cls) -> bool:
@@ -419,29 +423,29 @@ class NVDAHighlighter(providerBase.VisionEnhancementProvider):
 
 	def __init__(self):
 		super().__init__()
-		log.debug("Starting NVDAHighlighter")
+		log.debug("Starting NVDAMagnifier")
 		self.contextToRectMap = {}
 		winGDI.gdiPlusInitialize()
-		self._highlighterThread = threading.Thread(
+		self._magnifierThread = threading.Thread(
 			name=f"{self.__class__.__module__}.{self.__class__.__qualname__}",
 			target=self._run,
 			daemon=True,
 		)
-		self._highlighterRunningEvent = threading.Event()
-		self._highlighterThread.start()
-		# Make sure the highlighter thread doesn't exit early.
-		waitResult = self._highlighterRunningEvent.wait(0.2)
-		if waitResult is False or not self._highlighterThread.is_alive():
-			raise RuntimeError("Highlighter thread wasn't able to initialize correctly")
+		self._magnifierRunningEvent = threading.Event()
+		self._magnifierThread.start()
+		# Make sure the magnifier thread doesn't exit early.
+		waitResult = self._magnifierRunningEvent.wait(0.2)
+		if waitResult is False or not self._magnifierThread.is_alive():
+			raise RuntimeError("Magnifier thread wasn't able to initialize correctly")
 
 	def terminate(self):
-		log.debug("Terminating NVDAHighlighter")
-		if self._highlighterThread and self._window and self._window.handle:
-			if not winUser.user32.PostThreadMessageW(self._highlighterThread.ident, winUser.WM_QUIT, 0, 0):
+		log.debug("Terminating NVDAMagnifier")
+		if self._magnifierThread and self._window and self._window.handle:
+			if not winUser.user32.PostThreadMessageW(self._magnifierThread.ident, winUser.WM_QUIT, 0, 0):
 				raise WinError()
 			else:
-				self._highlighterThread.join()
-			self._highlighterThread = None
+				self._magnifierThread.join()
+			self._magnifierrThread = None
 		winGDI.gdiPlusTerminate()
 		self.contextToRectMap.clear()
 		super().terminate()
@@ -449,11 +453,11 @@ class NVDAHighlighter(providerBase.VisionEnhancementProvider):
 	def _run(self):
 		try:
 			if vision._isDebug():
-				log.debug("Starting NVDAHighlighter thread")
+				log.debug("Starting NVDAMagnifier thread")
 
 			window = self._window = self.customWindowClass(self)
 			timer = winUser.WinTimer(window.handle, 0, self._refreshInterval, None)
-			self._highlighterRunningEvent.set()  # notify main thread that initialisation was successful
+			self._magnifierRunningEvent.set()  # notify main thread that initialisation was successful
 			msg = MSG()
 			while (res := winUser.getMessage(byref(msg), None, 0, 0)) > 0:
 				winUser.user32.TranslateMessage(byref(msg))
@@ -463,25 +467,33 @@ class NVDAHighlighter(providerBase.VisionEnhancementProvider):
 				# https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessage
 				raise WinError()
 			if vision._isDebug():
-				log.debug("Quit message received on NVDAHighlighter thread")
+				log.debug("Quit message received on NVDANagnifier thread")
 			timer.terminate()
 			window.destroy()
 		except Exception:
-			log.exception("Exception in NVDA Highlighter thread")
+			log.exception("Exception in NVDA Magnifier thread")
 
 	def updateContextRect(self, context, rect=None, obj=None):
 		"""Updates the position rectangle of the highlight for the specified context.
 		If rect is specified, the method directly writes the rectangle to the contextToRectMap.
 		Otherwise, it will call L{getContextRect}
 		"""
+		log.debug("update called")
 		if context not in self.enabledContexts:
+			log.debug("context not in enabled")
 			return
 		if rect is None:
 			try:
 				rect = getContextRect(context, obj=obj)
 			except (LookupError, NotImplementedError, RuntimeError, TypeError):
 				rect = None
+				log.debug("rect=none")
 		self.contextToRectMap[context] = rect
+		log.debug("rect updated")
+		if rect:
+			log.debug("adjusting")
+			log.debug(rect.top, rect.left)
+			windows_utils.set_pos(int(rect.top), int(rect.left))
 
 	def handleFocusChange(self, obj):
 		self.updateContextRect(context=Context.FOCUS, obj=obj)
@@ -502,12 +514,12 @@ class NVDAHighlighter(providerBase.VisionEnhancementProvider):
 			self._window.refresh()
 
 	def _get_enabledContexts(self):
-		"""Gets the contexts for which the highlighter is enabled."""
+		"""Gets the contexts for which the magnifier is enabled."""
 		return tuple(
 			context
 			for context in _supportedContexts
-			if getattr(self.getSettings(), "highlight%s" % (context[0].upper() + context[1:]))
+			if getattr(self.getSettings(), "magnify%s" % (context[0].upper() + context[1:]))
 		)
 
 
-VisionEnhancementProvider = NVDAHighlighter
+VisionEnhancementProvider = NVDAMagnifier

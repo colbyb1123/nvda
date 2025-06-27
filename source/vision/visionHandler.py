@@ -109,11 +109,9 @@ class VisionHandler(AutoPropertyObject):
 	def _getBuiltInProviderIds(self):
 		from visionEnhancementProviders.NVDAHighlighter import NVDAHighlighterSettings
 		from visionEnhancementProviders.screenCurtain import ScreenCurtainSettings
+		from visionEnhancementProviders.NVDAMagnifier import NVDAMagnifierSettings
 
-		return [
-			NVDAHighlighterSettings.getId(),
-			ScreenCurtainSettings.getId(),
-		]
+		return [NVDAHighlighterSettings.getId(), ScreenCurtainSettings.getId(), NVDAMagnifierSettings.getId()]
 
 	def _updateAllProvidersList(self):
 		# Sort the providers alphabetically by id.
